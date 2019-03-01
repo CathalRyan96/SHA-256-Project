@@ -90,6 +90,7 @@ void sha256(){
 
 }
 
+//See Section 3.2
 uint32_t rotr(uint32_t n, uint32_t x){
     return (x >> n) | (x << (32 -n));
 
@@ -104,11 +105,13 @@ uint32_t shr(uint32_t n, uint32_t x){
 uint32_t sig0(uint32_t x){
   //ROTRn(x) = (x >> n) | (x << (32 - n))
   //SHR_n(x) = (x >> n)
+  //see sections 3.2 and 4.1.2      
   return(rotr(7, x) ^ rotr(18, x) ^ shr(3, x));
   
 
 }
 uint32_t sig1(uint32_t x){
+  //see sections 3.2 and 4.1.2
   return(rotr(17, x) ^ rotr(19, x) ^ shr(10, x));
 
 }
