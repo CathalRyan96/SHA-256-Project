@@ -1,3 +1,4 @@
+//https://ws680.nist.gov/publication/get_pdf.cfm?pub_id=910977
 // Cathal Ryan 2019
 // The Secure Hash Algorithm, 256 bit Version
 
@@ -56,7 +57,7 @@ void sha256(){
   uint32_t W[64];
 
   //Working variables
-  uint32_t a, b, c, d, e, f, g;
+  uint32_t a, b, c, d, e, f, g, h;
   
   //Temporary Variables
   uint32_t T1, T2;
@@ -74,10 +75,12 @@ void sha256(){
   };
 
   //the  current message block
-  uint32_t M[16];
+  uint32_t M[16] = {0, 0, 0, 0 , 0, 0, 0, 0};
   
   // for looping 
-  int t;
+  int i, t;
+
+  for(i=0;i<1;i++){
 
   for(t =0; t <  16; t++)
     W[t] = M[t];
@@ -113,13 +116,13 @@ void sha256(){
     H[5] = f + H[5];
     H[6] = g + H[6];
     H[7] = h + H[7];
+   
+  }
+    printf("%x, %x, %x, %x, %x, %x, %x, %x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
 
 
-
-
-
-
-}
+  
+};
 
 //See Section 3.2
 uint32_t rotr(uint32_t n, uint32_t x){
