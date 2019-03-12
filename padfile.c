@@ -8,13 +8,22 @@ union msgblock {
 };
 
 int main(int argc, char *argv[]) {
+  
+  union msgblock M;
+
+  uint64_t nobytes;
+
   FILE* f;
   
-  char c;
-
   f = fopen(argv[1], "r");
+
+  while (!feof(f)) {
+    
+    nobytes =  fread(M.e, 1, 64, f);
+    printf("llu\n", nobytes);
+  }
   
- printf("%c\n", fread(&c, 1, 1, f));
+ 
 
  fclose(f);
 
