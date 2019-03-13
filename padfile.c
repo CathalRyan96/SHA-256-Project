@@ -3,8 +3,8 @@
 
 union msgblock {
   uint8_t e[64];
-  uint8_t t[16];
-  uint8_t s[8];
+  uint32_t t[16];
+  uint64_t s[8];
 };
 
 int main(int argc, char *argv[]) {
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   while (!feof(f)) {
     
     nobytes =  fread(M.e, 1, 64, f);
-    printf("llu\n", nobytes);
+    printf("%llu\n", nobytes);
   }
   
  
