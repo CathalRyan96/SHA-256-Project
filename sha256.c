@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// Represents a message block
 union msgblock {
   uint8_t e[64];
   uint32_t t[16];
   uint64_t s[8];
 };
 
+// a flag for where we are in reading the file
 enum status {READ, PAD0, PAD1, FINISH};
 
 void sha256();
@@ -28,9 +30,16 @@ uint32_t SIG1(uint32_t x);
 uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
 uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
 
+//Gets next message block
+int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
+
 
 
 int main(int argc, char *argv[]){
+
+ FILE* f;
+    f = fopen(path, "r");
+      
 
   sha256();
 
@@ -38,6 +47,7 @@ int main(int argc, char *argv[]){
 }
 
 void sha256(){
+
 
   uint32_t K[] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
@@ -180,8 +190,55 @@ uint32_t Maj(uint32_t x, uint32_t y, uint32_t z){
 
 }
 
+int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
+  union msgblock M;
+
+  uint64_t nobits = 0;
+
+  uint64_t nobytes;
+
+  enum status S = READ;
+
+  int i;
+
+  while (S == READ) {
+    nobytes =  fread(M.e, 1, 64, f);
+    printf("Read %2llu bytes\n", nobytes);
+    nobits = nobits + (nobytes * 8);
+    if (nobytes < 56) {
+      printf("Ive found a block with less than 55 bytes!\n");
+      M.e[nobytes] = 0x80;
+      while (nobytes < 56) {
+        nobytes = nobytes + 1;
+        M.e[nobytes] = 0x00;
+      }
+      //Setting last 8 bytes as 64 bit integer
+      M.s[7] = nobits;
+      S = FINISH;
+    } else if (nobytes < 64) {
+        S = PAD0;
+        M.e[nobytes] = 0x80;
+        while (nobytes < 64){
+          nobytes = nobytes + 1;
+          M.e[nobytes] = 0x00;
+        }
+
+    }else if (feof(f)) {
+      S=PAD1;
+    }
+  }
+
+  if (S == PAD0 || S == PAD1){
+    for(i = 0; i < 64; i++)
+        M.e[i] = 0x00;
+      M.s[7] = nobits;
+  }
+  if (S == PAD1)
+    M.e[0] = 0x80;
 
 
+
+}
 
 
 
