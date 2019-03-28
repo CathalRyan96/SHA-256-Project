@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
  fclose(f);
 
  for(int i = 0; i < 64; i++)
-    printf("%x", M.e[i]);
+    printf("%x ", M.e[i]);
  printf("\n"); 
 
   return 0;

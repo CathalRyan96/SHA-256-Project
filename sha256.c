@@ -5,6 +5,14 @@
 #include <stdio.h>
 #include <stdint.h>
 
+union msgblock {
+  uint8_t e[64];
+  uint32_t t[16];
+  uint64_t s[8];
+};
+
+enum status {READ, PAD0, PAD1, FINISH};
+
 void sha256();
 
 uint32_t sig0(uint32_t x);
