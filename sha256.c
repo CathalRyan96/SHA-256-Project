@@ -15,7 +15,6 @@ union msgblock {
 // a flag for where we are in reading the file
 enum status {READ, PAD0, PAD1, FINISH};
 
-void sha256();
 
 uint32_t sig0(uint32_t x);
 uint32_t sig1(uint32_t x);
@@ -30,6 +29,7 @@ uint32_t SIG1(uint32_t x);
 uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
 uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
 
+void sha256(FILE *f);
 //Gets next message block
 int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
 
@@ -37,16 +37,25 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
 
 int main(int argc, char *argv[]){
 
- FILE* f;
-    f = fopen(path, "r");
+    FILE* f;
+    f = fopen(argv[1], "r");
       
 
-  sha256();
+  sha256(f);
 
   return 0;
 }
 
-void sha256(){
+void sha256(FILE *f){
+  
+  // the current message block
+   union msgblock M;
+  // the number of bits read from the file
+  uint64_t nobits = 0;
+  
+  //The status of the message blocks in terms of padding
+  enum status S = READ;
+
 
 
   uint32_t K[] = {
@@ -92,16 +101,14 @@ void sha256(){
    , 0x5be0cd19
   };
 
-  //the  current message block
-  uint32_t M[16] = {0, 0, 0, 0 , 0, 0, 0, 0};
   
   // for looping 
   int i, t;
 
-  for(i=0;i<1;i++){
+  while (nextmsgblock(f, M, S, nobits)) {
 
   for(t =0; t <  16; t++)
-    W[t] = M[t];
+    W[t] = M.t[t];
 
   for(t = 16; t <64; t++)
     sig1(W[t-2]) + W[t-7] + sig0(W[t-15]) + W[t-16];
@@ -191,13 +198,8 @@ uint32_t Maj(uint32_t x, uint32_t y, uint32_t z){
 }
 
 int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
-  union msgblock M;
-
-  uint64_t nobits = 0;
 
   uint64_t nobytes;
-
-  enum status S = READ;
 
   int i;
 
