@@ -31,22 +31,24 @@ uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
 
 void sha256(FILE *f);
 //Gets next message block
-int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits);
+int nextmsgblock(FILE *f, union msgblock *M, enum status *S, uint64_t *nobits);
 
 
 
 int main(int argc, char *argv[]){
 
-    FILE* f;
-    f = fopen(argv[1], "r");
+    FILE* msgf;
+    msgf = fopen(argv[1], "r");
       
 
-  sha256(f);
+  sha256(msgf);
+
+  fclose(msgf);
 
   return 0;
 }
 
-void sha256(FILE *f){
+void sha256(FILE *msgf){
   
   // the current message block
    union msgblock M;
@@ -105,31 +107,31 @@ void sha256(FILE *f){
   // for looping 
   int i, t;
 
-  while (nextmsgblock(f, M, S, nobits)) {
+  while (nextmsgblock(msgf, &M, &S, &nobits)) {
 
-  for(t =0; t <  16; t++)
-    W[t] = M.t[t];
+     for(t =0; t <  16; t++)
+        W[t] = M.t[t];
 
-  for(t = 16; t <64; t++)
-    sig1(W[t-2]) + W[t-7] + sig0(W[t-15]) + W[t-16];
+     for(t = 16; t <64; t++)
+      sig1(W[t-2]) + W[t-7] + sig0(W[t-15]) + W[t-16];
     //initialise a ,b, c. d, e, f, g, h.
-    a = H[0]; b = H[1]; c = H[2]; d = H[3]; e = H[4];
-    f = H[5], g = H[6], h = H[7];
+       a = H[0]; b = H[1]; c = H[2]; d = H[3]; e = H[4];
+        f = H[5], g = H[6], h = H[7];
 
-    //Step 3
-    for (t = 0; t < 64; t++){
-      T1 = h + SIG1(e) + Ch(e, f, g) + K[t] + W[t];
-      T2 = SIG0(a) + Maj(a, b, c);
-      h = g;
-      g = f;
-      f = e;
-      e = d + T1;
-      d = c;
-      c = b;
-      b = a;
-      a = T1 + T2;
+       //Step 3
+       for (t = 0; t < 64; t++){
+         T1 = h + SIG1(e) + Ch(e, f, g) + K[t] + W[t];
+         T2 = SIG0(a) + Maj(a, b, c);
+         h = g;
+         g = f;
+         f = e;
+         e = d + T1;
+         d = c;
+         c = b;
+         b = a;
+         a = T1 + T2;
 
-    }
+     }
 
 
     //Step 4.
@@ -197,48 +199,70 @@ uint32_t Maj(uint32_t x, uint32_t y, uint32_t z){
 
 }
 
-int nextmsgblock(FILE *f, union msgblock *M, enum status *S, int *nobits){
+int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits){
 
   uint64_t nobytes;
 
   int i;
 
-  while (S == READ) {
-    nobytes =  fread(M.e, 1, 64, f);
-    printf("Read %2llu bytes\n", nobytes);
-    nobits = nobits + (nobytes * 8);
-    if (nobytes < 56) {
-      printf("Ive found a block with less than 55 bytes!\n");
-      M.e[nobytes] = 0x80;
+  if (*S == FINISH)
+    return 0;
+    
+  //CHECK ID WE NEED ANOTHER BLOCK FULL OF PADDING
+   if (*S == PAD0 || *S == PAD1){
+    //Set first 56 bytes to all zero bytes
+    for(i = 0; i < 64; i++)
+        M->e[i] = 0x00;
+      M->s[7] = *nobits;
+      *S == FINISH;
+     if (*S == PAD1)
+       M->e[0] = 0x80;
+     //keep loop going
+      return 1;
+
+  }
+
+  
+  // if we reach here we havent finished reading file.
+
+    
+    nobytes =  fread(M->e, 1, 64, msgf);
+  
+
+   *nobits = *nobits + (nobytes * 8);
+   //if we read less than 56 bytes, padding can be put here
+     if (nobytes < 56) {
+      //add one bit as per standard
+       M->e[nobytes] = 0x80;
       while (nobytes < 56) {
         nobytes = nobytes + 1;
-        M.e[nobytes] = 0x00;
+        
+        M->e[nobytes] = 0x00;
       }
       //Setting last 8 bytes as 64 bit integer
-      M.s[7] = nobits;
-      S = FINISH;
+      M->s[7] = *nobits;
+      //tell s we are finished
+      *S = FINISH;
+      //otherwise check if we can put some padding into this block
     } else if (nobytes < 64) {
-        S = PAD0;
-        M.e[nobytes] = 0x80;
+        //tell S we need another message block with no one bit
+        *S = PAD0;
+        M->e[nobytes] = 0x80;
+        //pad the rest of the block
         while (nobytes < 64){
           nobytes = nobytes + 1;
-          M.e[nobytes] = 0x00;
+          M->e[nobytes] = 0x00;
         }
-
-    }else if (feof(f)) {
-      S=PAD1;
+    // otherwise check if we are at the end of the file
+    }else if (feof(msgf)) {
+      //tell s we need message block with all padding
+      *S = PAD1;
     }
-  }
+   
+    
 
-  if (S == PAD0 || S == PAD1){
-    for(i = 0; i < 64; i++)
-        M.e[i] = 0x00;
-      M.s[7] = nobits;
-  }
-  if (S == PAD1)
-    M.e[0] = 0x80;
-
-
+  
+    return 1;
 
 }
 
