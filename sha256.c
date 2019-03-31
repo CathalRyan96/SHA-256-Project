@@ -1,4 +1,4 @@
-//https://ws680.nist.gov/publication/get_pdf.cfm?pub_id=910977
+//https://ws681.nist.gov/publication/get_pdf.cfm?pub_id=910977
 // Cathal Ryan 2019
 // The Secure Hash Algorithm, 256 bit Version
 
@@ -29,14 +29,14 @@ uint32_t SIG1(uint32_t x);
 uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
 uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
 
-void sha256(FILE *f);
+void sha256(FILE *msgf);
 //Gets next message block
-int nextmsgblock(FILE *f, union msgblock *M, enum status *S, uint64_t *nobits);
+int nextmsgblock(FILE *msgf, union msgblock *M, enum status *S, uint64_t *nobits);
 
 
 
 int main(int argc, char *argv[]){
-    
+    printf("SHA256 Algorithm starting...\n"); 
   
     FILE* msgf;
     msgf = fopen(argv[1], "r");
