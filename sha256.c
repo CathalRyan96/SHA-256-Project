@@ -36,15 +36,21 @@ int nextmsgblock(FILE *f, union msgblock *M, enum status *S, uint64_t *nobits);
 
 
 int main(int argc, char *argv[]){
-
+    
+  
     FILE* msgf;
     msgf = fopen(argv[1], "r");
+    
+    if(msgf == NULL){
+      printf("File is invalid");
       
+
+    }else {  
 
   sha256(msgf);
 
   fclose(msgf);
-
+ }
   return 0;
 }
 
