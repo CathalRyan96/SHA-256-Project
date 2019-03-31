@@ -19,3 +19,13 @@ Assuming the project compiles without any errors, simply run the program by usin
 ```
 ./sha256 sha256.c
 ```
+
+## Testing the Program
+Throughout the making of this program I created a few files which can be used to test the functionality of this project. The functionality of the program can be tested by running the following commands:
+
+```
+./sha256 sha256.c
+./sha256 padfile.c
+./sha256 testFile.txt
+
+```
